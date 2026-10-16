@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>AnđelDragan</title>
 
 <style>
@@ -24,8 +25,7 @@ video {
     width: 100vw;
     height: 100vh;
     object-fit: contain;
-
-    /* Sprečava dodir direktno na video */
+    display: block;
     pointer-events: none;
 }
 </style>
@@ -33,15 +33,27 @@ video {
 
 <body>
 
-<video id="video"
-       src="AnđelDragan_GitHub.mp4"
-       playsinline
-       preload="auto"
-       loop>
+<!-- VIDEO KOJI SE PRIKAZUJE -->
+<video
+    id="video"
+    src="AnđelDragan_GitHub.mp4"
+    playsinline
+    preload="auto"
+    loop>
+</video>
+
+<!-- VIDEO IZ KOJEG SE KORISTI SAMO ZVUK -->
+<video
+    id="audio"
+    src="Rođendan.webm"
+    preload="auto"
+    loop
+    style="display:none;">
 </video>
 
 <script>
 const video = document.getElementById("video");
+const audio = document.getElementById("audio");
 
 let pokrenuto = false;
 
@@ -51,25 +63,27 @@ function pokreni() {
     pokrenuto = true;
 
     video.controls = false;
-    video.muted = false;
-    video.volume = 1;
 
-    video.play().catch(() => {
-        pokrenuto = false;
-    });
+    // Glavni video
+    video.muted = false;
+    video.volume = 0;
+
+    // Zvuk iz drugog videa
+    audio.muted = false;
+    audio.volume = 1;
+
+    video.play().catch(() => {});
+    audio.play().catch(() => {});
 }
 
-/* Prvi dodir pokreće video sa zvukom */
-document.addEventListener("pointerdown", pokreni, { once: true });
+/* Prvi dodir bilo gde na ekranu */
+document.addEventListener("pointerdown", pokreni, {
+    once: true
+});
 
-/* Ako telefon koristi touch događaj */
-document.addEventListener("touchstart", pokreni, { once: true });
-
-/* Ako neko pokuša da zaustavi video, odmah ga nastavi */
-video.addEventListener("pause", () => {
-    if (pokrenuto) {
-        video.play().catch(() => {});
-    }
+/* Za telefone */
+document.addEventListener("touchstart", pokreni, {
+    once: true
 });
 </script>
 
