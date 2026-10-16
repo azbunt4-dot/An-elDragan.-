@@ -2,7 +2,9 @@
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0,
+                   maximum-scale=1.0, user-scalable=no">
 
     <title>AnđelDragan</title>
 
@@ -13,8 +15,7 @@
             box-sizing: border-box;
         }
 
-        html,
-        body {
+        html, body {
             width: 100%;
             height: 100%;
             background: #000;
@@ -22,20 +23,34 @@
         }
 
         body {
+            position: relative;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
         }
 
-        video {
+        #video {
             width: 100vw;
             height: 100vh;
             object-fit: contain;
+            display: block;
+        }
 
-            /* Ne dozvoljava direktno upravljanje videom */
-            pointer-events: none;
+        /* Nevidljivi sloj preko CELOG ekrana */
+        #startLayer {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 9999;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
 
-            user-select: none;
+        /* Kada se video jednom pokrene, sloj nestaje */
+        #startLayer.hidden {
+            display: none;
         }
     </style>
 </head>
@@ -44,50 +59,75 @@
 
     <video
         id="video"
-        src="AnđelDragan_GitHub.mp4"
         playsinline
+        webkit-playsinline
         preload="auto"
         loop
+        controls="false"
         controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
         disablepictureinpicture
         disableremoteplayback>
+        
+        <source
+            src="AnđelDragan_GitHub.mp4"
+            type="video/mp4">
     </video>
+
+    <!-- Klik bilo gde na ekranu -->
+    <div id="startLayer"></div>
 
     <script>
         const video = document.getElementById("video");
+        const startLayer = document.getElementById("startLayer");
 
-        // Prvi klik/tap BILO GDE na stranici
-        function pokreniVideo() {
-            video.muted = false;
-            video.volume = 1.0;
+        async function startVideo() {
+            try {
+                // Zvuk uključen
+                video.muted = false;
+                video.volume = 1;
 
-            video.play();
+                // Kreće od početka
+                video.currentTime = 0;
 
-            // Nakon prvog klika više ne treba listener
-            document.removeEventListener("pointerdown", pokreniVideo);
+                // Pokreni video
+                await video.play();
+
+                // Ukloni nevidljivi sloj
+                startLayer.classList.add("hidden");
+
+            } catch (error) {
+                console.log("Video nije mogao da se pokrene:", error);
+            }
         }
 
-        document.addEventListener("pointerdown", pokreniVideo);
+        // Radi na tapu telefona
+        startLayer.addEventListener("touchstart", function(event) {
+            event.preventDefault();
+            startVideo();
+        }, { passive: false });
 
-        // Ako se video završi, kreće ponovo od početka
-        video.addEventListener("ended", () => {
+        // Radi na kliku
+        startLayer.addEventListener("click", function() {
+            startVideo();
+        });
+
+        // Video se beskonačno ponavlja
+        video.addEventListener("ended", function() {
             video.currentTime = 0;
             video.play();
         });
 
-        // Ako neko pokuša da ga pauzira, odmah nastavlja
-        video.addEventListener("pause", () => {
-            video.play();
+        // Ako se slučajno pauzira nakon pokretanja,
+        // nastavi reprodukciju.
+        video.addEventListener("pause", function() {
+            if (startLayer.classList.contains("hidden")) {
+                video.play();
+            }
         });
 
-        // Sprečava tastaturu da upravlja videom
-        document.addEventListener("keydown", (e) => {
-            e.preventDefault();
-        });
-
-        // Sprečava kontekstni meni
-        document.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
+        // Blokiraj kontekstni meni
+        document.addEventListener("contextmenu", function(event) {
+            event.preventDefault();
         });
     </script>
 
