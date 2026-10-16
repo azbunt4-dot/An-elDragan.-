@@ -1,135 +1,77 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0,
-                   maximum-scale=1.0, user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnđelDragan</title>
 
-    <title>AnđelDragan</title>
+<style>
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+}
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            background: #000;
-            overflow: hidden;
-        }
+video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
 
-        body {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #video {
-            width: 100vw;
-            height: 100vh;
-            object-fit: contain;
-            display: block;
-        }
-
-        /* Nevidljivi sloj preko CELOG ekrana */
-        #startLayer {
-            position: fixed;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            background: transparent;
-            z-index: 9999;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
-
-        /* Kada se video jednom pokrene, sloj nestaje */
-        #startLayer.hidden {
-            display: none;
-        }
-    </style>
+    /* Sprečava dodir direktno na video */
+    pointer-events: none;
+}
+</style>
 </head>
 
 <body>
 
-    <video
-        id="video"
-        playsinline
-        webkit-playsinline
-        preload="auto"
-        loop
-        controls="false"
-        controlslist="nodownload noplaybackrate nofullscreen noremoteplayback"
-        disablepictureinpicture
-        disableremoteplayback>
-        
-        <source
-            src="AnđelDragan_GitHub.mp4"
-            type="video/mp4">
-    </video>
+<video id="video"
+       src="AnđelDragan_GitHub.mp4"
+       playsinline
+       preload="auto"
+       loop>
+</video>
 
-    <!-- Klik bilo gde na ekranu -->
-    <div id="startLayer"></div>
+<script>
+const video = document.getElementById("video");
 
-    <script>
-        const video = document.getElementById("video");
-        const startLayer = document.getElementById("startLayer");
+let pokrenuto = false;
 
-        async function startVideo() {
-            try {
-                // Zvuk uključen
-                video.muted = false;
-                video.volume = 1;
+function pokreni() {
+    if (pokrenuto) return;
 
-                // Kreće od početka
-                video.currentTime = 0;
+    pokrenuto = true;
 
-                // Pokreni video
-                await video.play();
+    video.controls = false;
+    video.muted = false;
+    video.volume = 1;
 
-                // Ukloni nevidljivi sloj
-                startLayer.classList.add("hidden");
+    video.play().catch(() => {
+        pokrenuto = false;
+    });
+}
 
-            } catch (error) {
-                console.log("Video nije mogao da se pokrene:", error);
-            }
-        }
+/* Prvi dodir pokreće video sa zvukom */
+document.addEventListener("pointerdown", pokreni, { once: true });
 
-        // Radi na tapu telefona
-        startLayer.addEventListener("touchstart", function(event) {
-            event.preventDefault();
-            startVideo();
-        }, { passive: false });
+/* Ako telefon koristi touch događaj */
+document.addEventListener("touchstart", pokreni, { once: true });
 
-        // Radi na kliku
-        startLayer.addEventListener("click", function() {
-            startVideo();
-        });
-
-        // Video se beskonačno ponavlja
-        video.addEventListener("ended", function() {
-            video.currentTime = 0;
-            video.play();
-        });
-
-        // Ako se slučajno pauzira nakon pokretanja,
-        // nastavi reprodukciju.
-        video.addEventListener("pause", function() {
-            if (startLayer.classList.contains("hidden")) {
-                video.play();
-            }
-        });
-
-        // Blokiraj kontekstni meni
-        document.addEventListener("contextmenu", function(event) {
-            event.preventDefault();
-        });
-    </script>
+/* Ako neko pokuša da zaustavi video, odmah ga nastavi */
+video.addEventListener("pause", () => {
+    if (pokrenuto) {
+        video.play().catch(() => {});
+    }
+});
+</script>
 
 </body>
 </html>
